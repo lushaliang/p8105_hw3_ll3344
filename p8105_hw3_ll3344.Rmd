@@ -78,7 +78,7 @@ accel_df =
   read_csv("./data/accel_data.csv") 
 ```
 
-Clean and wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+Clean and wrangle the data. 
 ```{r}
 accel_df = 
   accel_df %>%
@@ -91,10 +91,35 @@ accel_df =
     names_prefix = "activity_",
     values_to = "activity"
   ) %>%
-  mutate(day = as.factor(day),
-         weekend = as.factor(weekend),
+  mutate(day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")),
+         weekend = factor(weekend),
          minute_of_day = as.numeric(minute_of_day),
-         )
+         ) %>%
+  group_by(week) %>%
+  arrange(day, .by_group = TRUE)
 ```
 
-There are a total of `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. 
+* There are a total of `r nrow(accel_df)` observations and `r ncol(accel_df)` variables. 
+* The 6 variables are: `r colnames(accel_df)`.
+
+We will now sum total minutes of activity for each day and create a table showing these totals. 
+```{r}
+accel_df %>%
+  group_by(day, day_id, week) %>%
+  summarize(total_activity = sum(activity)) %>%
+  knitr::kable()
+```
+It seems that on average the patient has less activity on Saturdays and more on Fridays.
+
+We will now plot activity over the course of the day. 
+```{r}
+accel_df %>%
+  ggplot(aes(x = minute_of_day,
+             y = activity,
+             color = day)) +
+  geom_line() +
+  geom_smooth()
+```
+The patient has little activity between the minute 0 to about 400. This corresponds to the hours between midnight and 7am, during which time he is probably sleeping. His most active periods during the week appear to be Sunday mornings and Friday evenings. 
+
+
