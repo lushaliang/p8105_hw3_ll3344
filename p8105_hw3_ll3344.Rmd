@@ -4,3 +4,18 @@ author: "Lusha Liang"
 output: github_document
 ---
 
+## Problem 1
+
+Load the instacart dataset from the p8105 datasets and load necessary packages
+```{r}
+library(p8105.datasets)
+data("instacart")
+
+library(tidyverse)
+```
+
+* The instacart dataset essentially shows online grocery store purchases from different users (user_id) and shows the particular item purchased (product_name) as well as the time of day the item was purchased (order_hour_of_day), the day of the week (order_dow), and the aisle to which the product belongs (aisle). The dataset also contains information on whether or not the product was a re-order (reordered).
+* The dataset contains `r nrow(instacart)` observations. Each row in the dataset is a product from an order. There is a single order per user in this dataset.
+* There are `r ncol(instacart)` variables. Variables included are: `r colnames(instacart)`. 
+* To give an example, row 1 shows a purchase by a customer with User ID # `r instacart %>% slice_head() %>% pull(user_id)` who is reordering `r instacart %>% slice_head() %>% pull(product_name)` at `r instacart %>% slice_head() %>% pull(order_hour_of_day)` AM. 
+
