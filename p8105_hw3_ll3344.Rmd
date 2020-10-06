@@ -70,3 +70,31 @@ instacart %>%
   knitr::kable()
 ```
 
+## Problem 2
+
+Load accelerometer data.
+```{r}
+accel_df = 
+  read_csv("./data/accel_data.csv") 
+```
+
+Clean and wrangle the data. Your final dataset should include all originally observed variables and values; have useful variable names; and encode data with reasonable variable classes. Describe the resulting dataset (e.g. what variables exist, how many observations, etc).
+```{r}
+accel_df = 
+  accel_df %>%
+  janitor::clean_names() %>%
+  mutate(weekend = ifelse(day %in% c("Saturday", "Sunday"), "weekend", "weekday")) %>%
+  relocate(week, day_id, day, weekend) %>%
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute_of_day",
+    names_prefix = "activity_",
+    values_to = "activity"
+  ) %>%
+  mutate(day = as.factor(day),
+         weekend = as.factor(weekend),
+         minute_of_day = as.numeric(minute_of_day),
+         )
+```
+
+There are a total of `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. 
