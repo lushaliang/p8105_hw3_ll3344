@@ -6,7 +6,7 @@ output: github_document
 
 ## Problem 1
 
-Load the instacart dataset from the p8105 datasets and load necessary packages
+Load the instacart dataset from the p8105 datasets and load necessary packages.
 ```{r}
 library(p8105.datasets)
 data("instacart")
@@ -14,8 +14,46 @@ data("instacart")
 library(tidyverse)
 ```
 
-* The instacart dataset essentially shows online grocery store purchases from different users (user_id) and shows the particular item purchased (product_name) as well as the time of day the item was purchased (order_hour_of_day), the day of the week (order_dow), and the aisle to which the product belongs (aisle). The dataset also contains information on whether or not the product was a re-order (reordered).
+* The instacart dataset essentially shows online grocery store purchases from different users (user_id) and shows the particular item purchased (product_name) as well as the time of day the item was purchased (order_hour_of_day), the day of the week (order_dow), and the aisle to which the product belongs (aisle). The dataset also contains information on whether or not the product was a re-order (reordered), among other information.
 * The dataset contains `r nrow(instacart)` observations. Each row in the dataset is a product from an order. There is a single order per user in this dataset.
 * There are `r ncol(instacart)` variables. Variables included are: `r colnames(instacart)`. 
 * To give an example, row 1 shows a purchase by a customer with User ID # `r instacart %>% slice_head() %>% pull(user_id)` who is reordering `r instacart %>% slice_head() %>% pull(product_name)` at `r instacart %>% slice_head() %>% pull(order_hour_of_day)` AM. 
+
+Now let's figure out how many aisles are represented in the dataset:
+```{r}
+instacart %>%
+  count(aisle) %>%
+  arrange(desc(n))
+```
+There are 134 aisles. The top 5 most ordered from aisles are fresh vegetables, fresh fruits, packaged vegetables/fruits, yogurt, and packaged cheese.
+
+Now let's make a plot that shows the number of items ordered in each aisle, limiting to aisles with more than 10,000 items ordered. 
+```{r}
+instacart %>%
+  count(aisle) %>%
+  filter(n > 10000) %>%
+  mutate(
+    aisle = factor(aisle),
+    aisle = fct_reorder(aisle, n)
+  ) %>%
+  ggplot(aes(x = aisle, y = n)) + 
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  xlab("Aisle name") + 
+  ylab("Number of items ordered") +
+  ggtitle("Most popular aisles in Instacart")
+```
+The aisles are ordered on the X-axis from left to right by increasing number of items ordered.
+
+We will now make a table featuring the three most popular items in the aisles: "baking ingredients", "dog food care", and "packaged vegetables fruits."
+```{r}
+instacart %>%
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
+  group_by(aisle) %>%
+  count(product_name) %>%
+  mutate(rank = min_rank(desc(n))) %>%
+  filter(rank < 4) %>%
+  arrange(aisle, rank) %>%
+  knitr::kable()
+```
 
