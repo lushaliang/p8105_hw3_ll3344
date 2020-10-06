@@ -4,14 +4,20 @@ author: "Lusha Liang"
 output: github_document
 ---
 
+First, load all necessary libraries:
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+library(patchwork)
+```
+
+
 ## Problem 1
 
-Load the instacart dataset from the p8105 datasets and load necessary packages.
+Load the instacart dataset from the p8105 datasets.
 ```{r}
-library(p8105.datasets)
 data("instacart")
-
-library(tidyverse)
 ```
 
 * The instacart dataset essentially shows online grocery store purchases from different users (user_id) and shows the particular item purchased (product_name) as well as the time of day the item was purchased (order_hour_of_day), the day of the week (order_dow), and the aisle to which the product belongs (aisle). The dataset also contains information on whether or not the product was a re-order (reordered), among other information.
@@ -118,8 +124,79 @@ accel_df %>%
              y = activity,
              color = day)) +
   geom_line() +
-  geom_smooth()
+  geom_smooth() +
+  xlab("Minute of the day") + 
+  ylab("Activity") +
+  ggtitle("Activity throughout the week") + 
+  scale_color_discrete("Day of the week")
 ```
-The patient has little activity between the minute 0 to about 400. This corresponds to the hours between midnight and 7am, during which time he is probably sleeping. His most active periods during the week appear to be Sunday mornings and Friday evenings. 
+The patient has little activity between minutes 0 to about 400. This corresponds to the hours between midnight and 7am, during which time he is probably sleeping. His most active periods during the week appear to be Sunday mornings and Friday evenings. 
 
+## Problem 3
+
+Load the noaa dataset.
+```{r}
+data("ny_noaa")
+```
+
+* This dataset contains information from the NOAA (National Oceanic and Atmospheric Association) National Climatic Data Center for all New York state weather stations from January 1, 1981 through December 31, 2010. 
+* It contains `r nrow(ny_noaa)` observations of `r ncol(ny_noaa)` variables. 
+* Essentially for each day from January 1, 1981-December 31, 2010 the dataset contains information on the amount of precipitation in tenths of mm (prcp), snowfall in mm (snow), snow depth in mm (snwd), as well as the maximum (tmax) and minimum temperature (tmin) in Celsius. 
+* Since each station only collects a subset of this dat, the resulting dataset does contain a significant amount of missing data shown in the below table by column/variable. 
+
+```{r}
+ny_noaa %>%
+  summarise_all(funs(sum(is.na(.))))
+```
+
+Now we will clean the data.
+```{r}
+noaa_df = 
+  ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), sep = "-") %>%
+  mutate(tmax = as.numeric(tmax)/10,
+         tmin = as.numeric(tmin)/10,
+         year = as.factor(year),
+         month = as.integer(month),
+         day = as.integer(day)
+         ) 
+```
+The units for precipitation and snowfall/snow depth have remained the same but we have converted the temperatures into Celsius rather than tenths of degrees Celsius. 
+
+```{r}
+noaa_df %>%
+  count(snow) %>%
+  arrange(desc(n)) %>%
+  head()
+```
+The top 5 most commonly observed values for snowfall are 0 mm, NA, 25 mm, 13 mm, and 51 mm. The numbers may seem somewhat arbitrary but make more sense when we consider that snowfall was likely measured in inches, then converted into mm. 13mm ~ 0.5 inch, 25 mm ~ 1 inch, 51 mm ~ 2 inches, and so on. 
+
+We will now make a two-panel plot showing the average max temperature in each station across years. Is there any observable / interpretable structure? Any outliers?
+```{r}
+noaa_df %>%
+  filter(month == 1 | month == 7) %>%
+  drop_na() %>%
+  group_by(id, year, month) %>%
+  summarize(mean_max = mean(tmax)) %>%
+  ggplot(aes(x = id, y = mean_max, color = year)) +
+  geom_point() +
+  facet_grid(~month) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
+```{r}
+tmax_tmin_p = 
+  noaa_df %>%
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d()
+
+snowfall_p = 
+  noaa_df %>%
+  filter(snow > 0, snow < 100) %>%
+  ggplot(aes(x = year, y = snow)) +
+  geom_violin(aes(fill = year))
+
+tmax_tmin_p/snowfall_p
+```
 
