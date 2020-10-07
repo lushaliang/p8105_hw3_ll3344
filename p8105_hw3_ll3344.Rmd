@@ -10,6 +10,22 @@ First, load all necessary libraries:
 library(tidyverse)
 library(p8105.datasets)
 library(patchwork)
+
+knitr:: opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.color = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
 ```
 
 
@@ -111,8 +127,12 @@ accel_df =
 We will now sum total minutes of activity for each day and create a table showing these totals. 
 ```{r}
 accel_df %>%
-  group_by(day, day_id, week) %>%
+  group_by(day, week) %>%
   summarize(total_activity = sum(activity)) %>%
+  pivot_wider(
+    names_from = week,
+    values_from = total_activity
+  ) %>%
   knitr::kable()
 ```
 It seems that on average the patient has less activity on Saturdays and more on Fridays.
@@ -123,7 +143,7 @@ accel_df %>%
   ggplot(aes(x = minute_of_day,
              y = activity,
              color = day)) +
-  geom_line() +
+  geom_line(alpha =.5) +
   geom_smooth() +
   xlab("Minute of the day") + 
   ylab("Activity") +
@@ -178,8 +198,9 @@ noaa_df %>%
   drop_na() %>%
   group_by(id, year, month) %>%
   summarize(mean_max = mean(tmax)) %>%
-  ggplot(aes(x = id, y = mean_max, color = year)) +
+  ggplot(aes(x = year, y = mean_max, group = id)) +
   geom_point() +
+  geom_path() +
   facet_grid(~month) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
