@@ -10,29 +10,12 @@ First, load all necessary libraries:
 library(tidyverse)
 library(p8105.datasets)
 library(patchwork)
-
-knitr:: opts_chunk$set(
-  fig.width = 6,
-  fig.asp = .6,
-  out.width = "90%"
-)
-
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-options(
-  ggplot2.continuous.color = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_color_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
 ```
-
 
 ## Problem 1
 
 Load the instacart dataset from the p8105 datasets.
-```{r}
+```{r instacart}
 data("instacart")
 ```
 
@@ -42,7 +25,7 @@ data("instacart")
 * To give an example, row 1 shows a purchase by a customer with User ID # `r instacart %>% slice_head() %>% pull(user_id)` who is reordering `r instacart %>% slice_head() %>% pull(product_name)` at `r instacart %>% slice_head() %>% pull(order_hour_of_day)` AM. 
 
 Now let's figure out how many aisles are represented in the dataset:
-```{r}
+```{r aisles}
 instacart %>%
   count(aisle) %>%
   arrange(desc(n))
@@ -50,7 +33,7 @@ instacart %>%
 There are 134 aisles. The top 5 most ordered from aisles are fresh vegetables, fresh fruits, packaged vegetables/fruits, yogurt, and packaged cheese.
 
 Now let's make a plot that shows the number of items ordered in each aisle, limiting to aisles with more than 10,000 items ordered. 
-```{r}
+```{r aisles_plot}
 instacart %>%
   count(aisle) %>%
   filter(n > 10000) %>%
@@ -68,7 +51,7 @@ instacart %>%
 The aisles are ordered on the X-axis from left to right by increasing number of items ordered.
 
 We will now make a table featuring the three most popular items in the aisles: "baking ingredients", "dog food care", and "packaged vegetables fruits."
-```{r}
+```{r pop_items}
 instacart %>%
   filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
   group_by(aisle) %>%
@@ -80,7 +63,7 @@ instacart %>%
 ```
 
 Finally, we will make a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week.
-```{r}
+```{r apples_icecream}
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
   group_by(product_name, order_dow) %>%
@@ -95,13 +78,13 @@ instacart %>%
 ## Problem 2
 
 Load accelerometer data.
-```{r}
+```{r accel}
 accel_df = 
   read_csv("./data/accel_data.csv") 
 ```
 
-Clean and wrangle the data. 
-```{r}
+Clean and wrangle the data. The data presented are not tidy in that the activity variables contain information both about the minute of time at which the activity occurred as well as the amount of activity. Thus we will need to utilize pivot_longer. In addition, the data are ordered by week but the days of the week appear to be ordered alphabetically rather than chronologically so this will need to be reordered. 
+```{r accel_clean}
 accel_df = 
   accel_df %>%
   janitor::clean_names() %>%
@@ -123,9 +106,10 @@ accel_df =
 
 * There are a total of `r nrow(accel_df)` observations and `r ncol(accel_df)` variables. 
 * The 6 variables are: `r colnames(accel_df)`.
+* The majority of the data correspond to activity information for each minute of the day spanning the course of 35 days (5 weeks).
 
-We will now sum total minutes of activity for each day and create a table showing these totals. 
-```{r}
+We will now sum total minutes of activity for each day and create a table showing these totals. We will use pivot_wider to make the data more readable. 
+```{r total_activity}
 accel_df %>%
   group_by(day, week) %>%
   summarize(total_activity = sum(activity)) %>%
@@ -135,10 +119,10 @@ accel_df %>%
   ) %>%
   knitr::kable()
 ```
-It seems that on average the patient has less activity on Saturdays and more on Fridays.
+It seems that on average the patient has less activity on Saturdays and more on Fridays. There does not seem to be a significant trend moving from week to week. 
 
-We will now plot activity over the course of the day. 
-```{r}
+We will now plot the patient's activity over the course of the day. 
+```{r plot_activity}
 accel_df %>%
   ggplot(aes(x = minute_of_day,
              y = activity,
@@ -150,12 +134,12 @@ accel_df %>%
   ggtitle("Activity throughout the week") + 
   scale_color_discrete("Day of the week")
 ```
-The patient has little activity between minutes 0 to about 400. This corresponds to the hours between midnight and 7am, during which time he is probably sleeping. His most active periods during the week appear to be Sunday mornings and Friday evenings. 
+The patient has little activity between minutes 0 to about 400. This corresponds to the hours between midnight and approximately 7am, during which time he is probably sleeping. His most active periods during the week appear to be Sunday mornings and Friday evenings. 
 
 ## Problem 3
 
 Load the noaa dataset.
-```{r}
+```{r noaa}
 data("ny_noaa")
 ```
 
@@ -164,13 +148,13 @@ data("ny_noaa")
 * Essentially for each day from January 1, 1981-December 31, 2010 the dataset contains information on the amount of precipitation in tenths of mm (prcp), snowfall in mm (snow), snow depth in mm (snwd), as well as the maximum (tmax) and minimum temperature (tmin) in Celsius. 
 * Since each station only collects a subset of this dat, the resulting dataset does contain a significant amount of missing data shown in the below table by column/variable. 
 
-```{r}
+```{r na_noaa}
 ny_noaa %>%
   summarise_all(funs(sum(is.na(.))))
 ```
 
-Now we will clean the data.
-```{r}
+Now we will clean the data. We will use the separate function to split up the month, date, and year currently all contained in the "date" variable. We will also change the units of tmax and tmin so that they are easier to understand and ensure variables are coded correctly for later analysis. 
+```{r noaa_clean}
 noaa_df = 
   ny_noaa %>% 
   separate(date, into = c("year", "month", "day"), sep = "-") %>%
@@ -180,10 +164,21 @@ noaa_df =
          month = as.integer(month),
          day = as.integer(day)
          ) 
+
+# Create a table to assign corresponding month names to the month numbers. 
+month_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name
+  )
+
+# Add month names 
+noaa_df = 
+  left_join(noaa_df, month_df, by = "month")
 ```
 The units for precipitation and snowfall/snow depth have remained the same but we have converted the temperatures into Celsius rather than tenths of degrees Celsius. 
 
-```{r}
+```{r snow}
 noaa_df %>%
   count(snow) %>%
   arrange(desc(n)) %>%
@@ -191,22 +186,26 @@ noaa_df %>%
 ```
 The top 5 most commonly observed values for snowfall are 0 mm, NA, 25 mm, 13 mm, and 51 mm. The numbers may seem somewhat arbitrary but make more sense when we consider that snowfall was likely measured in inches, then converted into mm. 13mm ~ 0.5 inch, 25 mm ~ 1 inch, 51 mm ~ 2 inches, and so on. 
 
-We will now make a two-panel plot showing the average max temperature in each station across years. Is there any observable / interpretable structure? Any outliers?
-```{r}
+We will now make a two-panel plot showing the average max temperature in each station across years. 
+```{r plot_tmax}
 noaa_df %>%
-  filter(month == 1 | month == 7) %>%
+  filter(month_name == "January" | month_name == "July") %>%
   drop_na() %>%
-  group_by(id, year, month) %>%
+  group_by(id, year, month_name) %>%
   summarize(mean_max = mean(tmax)) %>%
   ggplot(aes(x = year, y = mean_max, group = id)) +
   geom_point() +
   geom_path() +
-  facet_grid(~month) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  facet_grid(~month_name) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  xlab("Year") + 
+  ylab("Average maximum temperature") +
+  ggtitle("Average maximum temperature across NY stations from 1981-2010 in January and July")
 ```
+The plot shows that as expected the maximum temperature in July is about 30 degrees Celsius higher than in January in NY. There is no clear trend over time. There are two notable outliers in January 1982 and 1996 with markedly lower temperatures. There is also an outlier in July 1988 which also appeared to have a markedly lower temperature than would be expected. 
 
-Make a two-panel plot showing (i) tmax vs tmin for the full dataset (note that a scatterplot may not be the best option); and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year.
-```{r}
+Finally, we will make a two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year. We will use the patchwork package to link the two graphs. 
+```{r patchwork}
 tmax_tmin_p = 
   noaa_df %>%
   ggplot(aes(x = tmin, y = tmax)) +
