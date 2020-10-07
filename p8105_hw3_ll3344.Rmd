@@ -12,6 +12,22 @@ library(p8105.datasets)
 library(patchwork)
 ```
 
+And set some ggplot preferences:
+```{r pref}
+# Minimalist theme
+theme_set(theme_minimal())
+
+# Viridis color scheme for best visualization and color separation
+options(
+  ggplot2.continuous.color = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_color_discrete = scale_color_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
 ## Problem 1
 
 Load the instacart dataset from the p8105 datasets.
@@ -199,7 +215,7 @@ noaa_df %>%
   facet_grid(~month_name) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   xlab("Year") + 
-  ylab("Average maximum temperature") +
+  ylab("Average maximum temperature (C)") +
   ggtitle("Average maximum temperature across NY stations from 1981-2010 in January and July")
 ```
 The plot shows that as expected the maximum temperature in July is about 30 degrees Celsius higher than in January in NY. There is no clear trend over time. There are two notable outliers in January 1982 and 1996 with markedly lower temperatures. There is also an outlier in July 1988 which also appeared to have a markedly lower temperature than would be expected. 
@@ -209,13 +225,19 @@ Finally, we will make a two-panel plot showing (i) tmax vs tmin for the full dat
 tmax_tmin_p = 
   noaa_df %>%
   ggplot(aes(x = tmin, y = tmax)) +
-  geom_bin2d()
+  geom_bin2d() +
+  xlab("Minimum temperature (C)") +
+  ylab("Maximum temperature (C)") +
+  theme(legend.position = "right")
 
 snowfall_p = 
   noaa_df %>%
   filter(snow > 0, snow < 100) %>%
   ggplot(aes(x = year, y = snow)) +
-  geom_violin(aes(fill = year))
+  geom_violin(aes(fill = year)) + 
+  xlab("Year") + 
+  ylab("Snowfall (mm)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1), legend.position = "none")
 
 tmax_tmin_p/snowfall_p
 ```
