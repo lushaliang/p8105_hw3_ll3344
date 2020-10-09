@@ -242,7 +242,7 @@ noaa_df %>%
   ggtitle("Average maximum temperature across NY in January and July")
 ```
 
-The plot shows that as expected the maximum temperature in July is about 30 degrees Celsius higher than in January in NY. There is no clear trend over time. There are two notable outliers in January 1982 and 1996 with markedly lower temperatures. There is also an outlier in July 1988 which also appeared to have a markedly lower temperature than would be expected. 
+The plot shows that as expected the maximum temperature in July is about 30 degrees Celsius higher than in January in NY. There is no clear trend over time although certain stations appear to be more consistently warmer in January and July than other stations, reflecting temperature variations across NY state. There are two notable outliers in January 1982 and 1996 with markedly lower temperatures. There is also an outlier in July 1988 which also appeared to have a markedly lower temperature than would be expected. In addition there does appear to be a somewhat cyclical nature to maximum temperatures in that for example in 1988 temperatures seemed a bit cooler overall but then seem to rise in 1990,then drop again in 1994. 
 
 Finally, we will make a two-panel plot showing (i) tmax vs tmin for the full dataset; and (ii) make a plot showing the distribution of snowfall values greater than 0 and less than 100 separately by year. We will use the patchwork package to link the two graphs. 
 
